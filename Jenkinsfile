@@ -11,6 +11,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    echo 'Running Build Docker Image'
                     app = docker.build("rodozur/train-schedule")
                     app.inside {
                         sh 'echo $(curl localhost:8080)'
@@ -21,6 +22,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
+                    echo 'Running Push Docker Image to Dockerhub'
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-login') {
                         app.push("${env.BUILD_NUMBER}")
                         app.push("latest")
@@ -32,6 +34,7 @@ pipeline {
             steps {
                 input 'Deploy to Production?'
                 milestone(1)
+                echo 'Running Deploy to Production docker server'
                 withCredentials([usernamePassword(credentialsId: 'servers-login', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
                     script {
                         sh "sshpass -p '$USERPASS' -v ssh -o StrictHostKeyChecking=no $USERNAME@$prod_ip \"docker pull willbla/train-schedule:${env.BUILD_NUMBER}\""
